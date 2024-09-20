@@ -210,7 +210,7 @@ class LlamaModelAdapter(ModelAdapter):
         return self.model.lm_head
 
     def post_init(self, tokenizer: PreTrainedTokenizerBase) -> None:
-        # Llama-2 and Llama-3 don't have a pad tokens by default
+        # Llama-2 and Llama-3 don't have pad tokens by default
         tokenizer.pad_token = tokenizer.eos_token
         self.config.pad_token_id = tokenizer.pad_token_id
 
@@ -224,9 +224,10 @@ class LlamaModelAdapter(ModelAdapter):
         local_files_only: bool = False,
         token: str | bool | None = None,
     ) -> ModelAdapter | None:
-        if not (model_name.startswith("meta-llama/Llama-2") or model_name.startswith("meta-llama/Meta-Llama-3")):
+        # Allow ALMA-7B model to be loaded with Llama2 architecture
+        if not (model_name.startswith("meta-llama/Llama-2") or model_name.startswith("meta-llama/Meta-Llama-3") or model_name == "haoranxu/ALMA-7B"):
             return None
-
+        
         model = LlamaForCausalLM.from_pretrained(
             model_path, torch_dtype=dtype, token=token, local_files_only=local_files_only
         )
@@ -244,7 +245,8 @@ class LlamaModelAdapter(ModelAdapter):
         local_files_only: bool = False,
         token: str | bool | None = None,
     ) -> ModelAdapter | None:
-        if not (model_name.startswith("meta-llama/Llama-2") or model_name.startswith("meta-llama/Meta-Llama-3")):
+        # Allow ALMA-7B model to be handled similarly to Llama2
+        if not (model_name.startswith("meta-llama/Llama-2") or model_name.startswith("meta-llama/Meta-Llama-3") or model_name == "haoranxu/ALMA-7B"):
             return None
 
         class UninitializedLlamaForCausalLM(LlamaForCausalLM):

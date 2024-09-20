@@ -10,6 +10,7 @@ from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from .layernorm_fusion import fuse_modules, replace_layers
 from .model_adapter import ModelAdapter, SlicingConfig
+from .adapters.llama_adapter import LlamaModelAdapter
 from .rotate import slice_rotated_model
 
 
@@ -87,15 +88,25 @@ def get_model_and_tokenizer(
         "and model weights" if not uninitialized else "",
         model_path if local_model else 'Hugging Face',
     )
-
-    model_adapter = ModelAdapter.from_model(
-        model_name,
-        model_path=model_path,
-        model_type=model_type,
-        dtype=dtype,
-        local_files_only=local_model,
-        token=token,
-    )
+    if model_name == "haoranxu/ALMA-7B":
+        print("Using LlamaAdapter for ALMA-7B")
+        model_adapter = LlamaModelAdapter.from_model(
+            model_name=model_name,
+            model_path=model_path,
+            model_type="pretrained",
+            dtype=dtype,
+            local_files_only=False,
+            token=token,
+        )
+    else:
+        model_adapter = ModelAdapter.from_model(
+            model_name,
+            model_path=model_path,
+            model_type=model_type,
+            dtype=dtype,
+            local_files_only=local_model,
+            token=token,
+        )
 
     model = model_adapter.model
     model.seqlen = model.config.max_position_embeddings
