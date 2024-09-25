@@ -51,7 +51,6 @@ def get_model_and_tokenizer(
     uninitialized: bool = False,
     dtype: torch.dtype = torch.float16,
     token: str | bool | None = None,
-    sparsity: float | None = None,
 ) -> tuple[ModelAdapter, PreTrainedTokenizerBase]:
     """
     Load the model and the tokenizer from the given path.
@@ -78,25 +77,15 @@ def get_model_and_tokenizer(
     local_model = model_path is not None
 
     if local_model and uninitialized:
-        print(f"Local uninitialised model at path: {pathlib.Path(model_path) / f'{model_name}_{sparsity}.json'}")
-        local_model = (pathlib.Path(model_path) / f"{model_name}_{sparsity}.json").exists()  # TODO: I believe this issue is here because it should be a local model but it doesn't find the config so reverts to getting it from hf
-        print("local model? ", local_model)
-        # local_model = (pathlib.Path(model_path) / "config.json").exists()
+        local_model = (pathlib.Path(model_path) / "config.json").exists()
 
     # for HF models the path to use is the model name
     if not local_model:
         model_path = model_name
 
-    logging.info(
-        f"Loading %s config %s from %s",
-        model_name,
-        "and model weights" if not uninitialized else "",
-        model_path if local_model else 'Hugging Face',
-    )
-    if "ALMA-7B" in model_name:  # TODO: for eval of sliced model, it should load the local
-        print(model_path)
-        model_path = "haoranxu/ALMA-7B"
-        print(model_path)
+    logging.info(f"Loading {model_name} config {'and model weights ' if not uninitialized else ''}from {model_path if local_model else 'Hugging Face'}")
+    
+    if "ALMA-7B" in model_name:
         print("Using LlamaAdapter for ALMA-7B")
         model_adapter = LlamaModelAdapter.from_model(
             model_name=model_name,
@@ -150,22 +139,11 @@ def load_sliced_model(
     my_sliced_model_name = f"{my_model_suffix}_{sparsity}.pt"
     my_sliced_model_config = f"{my_model_suffix}_{sparsity}.json"
     
-    print("sliced_model_path: ", os.path.abspath(sliced_model_path))  # CORRECT: remove
-    print("my_sliced_model_name", my_sliced_model_name)  # CORRECT: remove
-    print("my_sliced_model_config: ", my_sliced_model_config)  # CORRECT: remove
-    
-    print("STUFF BEING PASSED TO GET MODEL AND TOKENIZER")
-    print("model name ", model_name)
-    print("model path ", sliced_model_path)
-    print("token ", token)
-    print("sparsity ", sparsity)
-
     model_adapter, tokenizer = get_model_and_tokenizer(
         model_name,
         model_path=sliced_model_path,
         uninitialized=True,
         token=token,
-        sparsity=sparsity,
     )
     replace_layers(model_adapter)
     fuse_modules(model_adapter)
