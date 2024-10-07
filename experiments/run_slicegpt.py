@@ -6,9 +6,12 @@ import logging
 import os
 import pathlib
 import shutil
+import sys
 
 import torch
 import wandb
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from slicegpt import data_utils, gpu_utils, hf_utils, layernorm_fusion, rotate, utils
 from slicegpt.config import config
