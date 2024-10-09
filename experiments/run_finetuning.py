@@ -331,6 +331,9 @@ def finetuning_main(args: argparse.Namespace) -> None:
         optimizers=(optimizer, lr_scheduler),
         callbacks=[EarlyStoppingCallback(early_stopping_patience=args.early_stopping_patience)],
     )
+    
+    # !TEMPORARY FIX: for num_arguments issue
+    trainer.args.gradient_checkpointing = False
 
     # required to enable gradient_checkpointing
     lora_model.enable_input_require_grads()
