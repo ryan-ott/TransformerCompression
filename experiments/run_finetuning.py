@@ -316,7 +316,7 @@ def finetuning_main(args: argparse.Namespace) -> None:
         evaluation_strategy=args.evaluation_strategy,
         metric_for_best_model="eval_loss",
         greater_is_better=False,  # lower eval_loss is better,
-        gradient_checkpointing=True,
+        gradient_checkpointing=False,  # !TEMPORARY FIX: for num_arguments issue
     )
 
     if not args.distribute_model:
@@ -332,9 +332,6 @@ def finetuning_main(args: argparse.Namespace) -> None:
         callbacks=[EarlyStoppingCallback(early_stopping_patience=args.early_stopping_patience)],
     )
     
-    # !TEMPORARY FIX: for num_arguments issue
-    trainer.args.gradient_checkpointing = False
-
     # required to enable gradient_checkpointing
     lora_model.enable_input_require_grads()
 
@@ -378,8 +375,9 @@ def finetuning_main(args: argparse.Namespace) -> None:
     logging.info(f'PPL after finetuning: {dataset_ppl:.4f}')
     wandb.log({"post_finetune_ppl": dataset_ppl})
 
-    Reporter()(ppl=dataset_ppl)
-    syne_tune.Reporter()(ppl=dataset_ppl)
+    # ! Disabled for now
+    # Reporter()(ppl=dataset_ppl)
+    # syne_tune.Reporter()(ppl=dataset_ppl)
 
 
 if __name__ == "__main__":
